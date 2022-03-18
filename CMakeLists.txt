@@ -151,6 +151,11 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
+catkin_install_python(
+  PROGRAMS scripts/gimbal_controller_node.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 #############
 ## Install ##
 #############
