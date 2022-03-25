@@ -26,7 +26,7 @@ ports:
     servos:
         # SERVO LIST FOR THIS PORT
         - id: 1                # (ID set in servo eeprom, must be unique on this port)
-          joint_name: joint_1  # (MUST BE UNIQUE ACROSS ALL PORTS)
+          joint_name: roll  # (MUST BE UNIQUE ACROSS ALL PORTS)
           #
           # The three values below are mandatory, they define the orientation and zeroing of the dynamixel:
           #
@@ -40,7 +40,7 @@ ports:
           torque_limit: 1.0    # maximum motor torque for all modes, given as a fraction of rated max (0-1)
 
         - id: 2
-          joint_name: joint_2
+          joint_name: tilt
           zero_pos: 2048
           min_pos: 0
           max_pos: 4095
