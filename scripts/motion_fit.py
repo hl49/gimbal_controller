@@ -43,10 +43,18 @@ class Motion():
                     Quaternion,
                     queue_size=1)
 
-    def publish_compensation_angles(self):
-        pass
-    def publish_plane_results(self):
-        pass
+    def publish_compensation_angles(self, ang_comp, ang_pitch):
+        angles = Quaternion()
+        angles.x = ang_comp
+        angles.y = ang_pitch
+        self.compensation_pub.publish(angles)
+
+    def publish_plane_results(self, x, y, z):
+        theta = Quaternion()
+        theta.x = x
+        theta.y = y
+        theta.z = z
+        self.plane_result_pub.publish(theta)
 
     def fit(self, x, y): #Curve Fitting Straight line
 
@@ -244,7 +252,7 @@ class Motion():
                 b_pred=self.last_b+self.b_inc
                 a_p=np.tan(theta_pred)
                 b_p=b_pred
-                #print (a_p,b_p,'\n')
+                # print (a_p,b_p,'\n')
 
                 self.last_last_angle = self.last_angle
                 self.last_last_b = self.last_b
@@ -344,12 +352,11 @@ class Motion():
                 theta_z=np.arctan2(rotation_matrix[1,0],rotation_matrix[0,0])
                 print('Theta z rad: ',theta_z,'\n')
 
+                self.publish_compensation_angles(angle_compensate_rad, pitch_angle_rad)
+                self.publish_plane_results(theta_x, theta_y, theta_z)
 
                 te=time.time()
 
-
-# def calc(event=None):
-#     print("hey")
 
 if __name__ == "__main__":
 
@@ -357,8 +364,6 @@ if __name__ == "__main__":
     rospy.init_node("motion_fit_node")
 
     motion = Motion()
-    print(motion.path)
-    print(motion.dirlist)
     rospy.Timer(rospy.Duration(1.0/1.0), motion.calc)
 
     rospy.spin()
