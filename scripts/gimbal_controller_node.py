@@ -2,7 +2,7 @@
 
 import rospy
 import numpy as np
-import rostopic
+import math
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32MultiArray
 
@@ -18,6 +18,8 @@ class Gimbal:
         self.servo_data_seq_counter = 0
         self.tilt = 0.0
         self.roll = 0.0
+        # self.max_tilt = math.radians(65)
+        # self.max_roll = math.radians(45)
 
         # Init ROS node
         rospy.init_node("gimbal_controller")
@@ -48,6 +50,8 @@ class Gimbal:
         self.tilt = round(data.data[0],2) * -1.0
         self.roll = round(data.data[1],2) * -1.0
 
+        # if self.tilt > - self.max_tilt and self.tilt <
+
     def publish_servos_ref(self):
 
         servo_data = JointState()
@@ -67,9 +71,10 @@ class Gimbal:
 
         # if there is not target position, set 0. 
 
+        # Controller
+        
         # set servos
         self.publish_servos_ref()
-        
 
 
 if __name__ == "__main__":
