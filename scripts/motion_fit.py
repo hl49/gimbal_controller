@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+# perception_skyline
 import numpy as np
 import cv2 as cv
 import imutils
@@ -35,11 +35,15 @@ class Motion():
         self.last_b = 0
         self.b_inc = 0
 
-        self.compensation_pub = rospy.Publisher("/comp_mov_ang", 
+
+        # modify customise  Float34
+        # skyline_result
+        # plane_ resuls
+        self.compensation_pub = rospy.Publisher("/skyline_results", 
                     Quaternion,
                     queue_size=1)
 
-        self.plane_result_pub = rospy.Publisher("/plane_result", 
+        self.plane_result_pub = rospy.Publisher("/plane_results", 
                     Quaternion,
                     queue_size=1)
 
@@ -108,7 +112,7 @@ class Motion():
         rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
         return rotation_matrix
 
-    def calc(self, event=None):
+    def comp_ang_from_normal_vec(self, event=None):
         if self.image_counter < len(self.dirlist):
             ts=time.time()
             self.image_counter +=1
@@ -192,19 +196,20 @@ class Motion():
                 #print (self.theta_inc,'\n')
                 self.b_inc = self.last_b - self.last_last_b
 
-                #Compensate Movement
+                # Compensate Movement
                 angle_2=angle_a
+##### rename roll compensation                
                 angle_compensate_rad=angle_2 - self.reference_angle
                 angle_compensate_degrees=np.rad2deg(angle_compensate_rad)
                 #print("Roll angle rad:",angle_compensate_rad,'\n')
                 #print("Roll angle degrees:",angle_compensate,'\n')
-                rotate_image=img
-                allign_image_roll=imutils.rotate(rotate_image,angle_compensate_degrees)
+                # rotate_image=img
+                # allign_image_roll=imutils.rotate(rotate_image,angle_compensate_degrees)
                 
                 b_2=b
                 b_compensate=b_2 - self.reference_b
                 #print("b translation:",b_compensate,'\n')
-                allign_image_pitch_roll=imutils.translate(allign_image_roll,0,b_compensate)
+                # allign_image_pitch_roll=imutils.translate(allign_image_roll,0,b_compensate)
 
                 b_half = self.reference_b - self.img_height/2 #540 half height size resolution
                 b_half_angle=np.arctan(b_half/self.focal_length_pixel) #516 pixels focal lenght Raspberry Pi camera V2 (using calibation)
@@ -361,9 +366,10 @@ class Motion():
 if __name__ == "__main__":
 
     # Init ROS Node
-    rospy.init_node("motion_fit_node")
+    rospy.init_node("perception_node")
 
     motion = Motion()
-    rospy.Timer(rospy.Duration(1.0/1.0), motion.calc)
+    rospy.Timer(rospy.Duration(1.0/1.0), motion.comp_ang_from_normal_vec)
 
+    
     rospy.spin()
