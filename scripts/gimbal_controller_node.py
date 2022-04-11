@@ -10,20 +10,20 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32MultiArray
 
 class Gimbal:
-    # def shutdown():
 
     def __init__(self):
 
         # Set variables
         # Node frequency
-        self.frequency = 1.0/10.0 
-        self.taget = []
+        self.frequency = 10.0
+        self.pos_initilized = False
         self.servo_data_seq_counter = 0
         self.tilt = 0.0
         self.roll = 0.0
-        self.ini_tilt = 0.0
-        self.ini_roll = 0.0
-        self.count_init_servo_pos = 0
+        self.ref_pos = {'tilt':0.0, 'roll': 0.0}
+        self.target_pos = {'tilt':0.0, 'roll': 0.0}
+        self.ini_pos = {'tilt':0.0, 'roll':0.0}
+        self.count_init_servo_pos = 0 
         self.num_samples_init = 20
         self.ini_tilt_arr = np.zeros([self.num_samples_init, 1])
         self.ini_roll_arr = np.zeros([self.num_samples_init, 1])
@@ -64,10 +64,11 @@ class Gimbal:
             self.ini_roll_arr[self.count_init_servo_pos, 0] = joints['roll']
             self.count_init_servo_pos += 1
         else:
-            self.ini_tilt = self.ini_tilt_arr.mean()
-            self.ini_roll = self.ini_roll_arr.mean()
+            self.ini_pos['tilt'] = self.ini_tilt_arr.mean()
+            self.ini_pos['roll'] = self.ini_roll_arr.mean()
+            self.pos_initilized = True
             self.sub_joint_states.unregister()
-        
+    
 
     def get_imu_callback(self, data):
         # print(data.data)
@@ -76,7 +77,7 @@ class Gimbal:
 
         # if self.tilt > - self.max_tilt and self.tilt <
 
-    def publish_servos_ref(self):
+    def pub_servos_ref(self):
 
         servo_data = JointState()
 
@@ -85,7 +86,7 @@ class Gimbal:
         servo_data.header.seq = self.servo_data_seq_counter
 
         servo_data.name = ["tilt", "roll"]
-        servo_data.position = [self.tilt, self.roll]
+        servo_data.position = [self.target_pos['tilt'], self.target_pos['roll']]
 
         self.servo_data_seq_counter =+ 1
         self.servo_pub.publish(servo_data)
@@ -97,17 +98,25 @@ class Gimbal:
 
         # Controller
         
-        # set servos
-        self.publish_servos_ref()
+        # Frequency of execution
+
+        rate = rospy.Rate(self.frequency)
+
+        while not rospy.is_shutdown():
+            if self.pos_initilized == True:
+                self.target_pos['tilt'] = self.ref_pos['tilt'] + self.ini_pos['tilt']
+                self.target_pos['roll'] = self.ref_pos['roll'] + self.ini_pos['roll']
+                self.pub_servos_ref()
+            rate.sleep()
 
 
 if __name__ == "__main__":
 
-
     gimbal = Gimbal()
 
-    rospy.Timer(rospy.Duration(gimbal.frequency), gimbal.stabilize)
-
-    rospy.spin()
+    try:
+        gimbal.stabilize();
+    except rospy.ROSInterruptException:
+        pass
 
     
